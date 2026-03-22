@@ -1,6 +1,7 @@
 import subprocess
-from os import environ, mkdir
+from os import mkdir
 from os.path import join, getmtime
+from config import NOTES_PATH
 
 TOOLS = [
   {
@@ -162,8 +163,6 @@ TOOLS = [
 PROTECTED_PATHS = [
   "/PROMPT.md"
 ]
-
-NOTES_PATH = environ.get("NOTES_PATH", "/home/sam/Documents/Obsidian/Voice")
 
 def create_directory(path: str) -> str:
   """Create a directory at the given path."""

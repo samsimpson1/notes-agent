@@ -1,16 +1,14 @@
-from os import environ
 from os.path import join
 from datetime import datetime
 from base64 import b64encode
 from json import loads
 from openai import OpenAI
 import tools
+from log import Log
+from config import NOTES_PATH, API_KEY, API_BASE_URL, MODEL, MAX_ITERATIONS
 
-NOTES_PATH = environ.get("NOTES_PATH", "/home/sam/Documents/Obsidian/Voice")
 
-def invoke(audio_data: bytes, audio_format: str):
-    API_KEY = environ.get("GEMINI_API_KEY")
-
+def invoke(audio_data: bytes, audio_format: str, log: Log):
     prompt_path = join(NOTES_PATH, "PROMPT.md")
 
     prompt = open(prompt_path, 'r').read()
@@ -23,7 +21,7 @@ def invoke(audio_data: bytes, audio_format: str):
 
     openai = OpenAI(
         api_key=API_KEY,
-        base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+        base_url=API_BASE_URL
     )
 
     messages = [
@@ -43,11 +41,12 @@ def invoke(audio_data: bytes, audio_format: str):
         ]}
     ]
 
-    for i in range(0, 30):
+    for i in range(0, MAX_ITERATIONS):
         print(f"iteration {i}")
+        log.write(f"Iteration {i}/{MAX_ITERATIONS}")
 
         response = openai.chat.completions.create(
-            model="gemini-3-flash-preview",
+            model=MODEL,
             messages=messages,
             tools=tools.TOOLS,
             tool_choice="auto"
@@ -61,7 +60,7 @@ def invoke(audio_data: bytes, audio_format: str):
         messages.append(choice.message)
 
         if finish_reason == "stop":
-            print("received stop finish_reason")
+            log.write("Received stop finish_reason")
             return
         
         if finish_reason == "tool_calls":
@@ -69,7 +68,7 @@ def invoke(audio_data: bytes, audio_format: str):
                 tool_call_id = tool_call.id
                 f = tool_call.function
 
-                print(f"tool call: {f.name} with args {f.arguments}")
+                log.write(f"Tool call: {f.name} with args {f.arguments}")
 
                 func = getattr(tools, f.name)
                 args = f.arguments

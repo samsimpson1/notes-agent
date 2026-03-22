@@ -2,18 +2,10 @@ from os import environ
 from os.path import join
 from datetime import datetime
 from base64 import b64encode
-from json import dumps, loads
+from json import loads
 from openai import OpenAI
 import tools
 
-TOOLS = [
-    tools.create_directory,
-    tools.read_file,
-    tools.edit_file,
-    tools.write_file,
-    tools.glob_files,
-    tools.grep_files
-]
 
 def main():
     API_KEY = environ.get("GEMINI_API_KEY")

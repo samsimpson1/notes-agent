@@ -8,3 +8,5 @@ WORKDIR /app
 RUN uv sync --locked
 
 ENTRYPOINT [ "uv", "run", "main.py" ]
+
+LABEL org.opencontainers.image.source="https://github.com/samsimpson1/notes-agent"

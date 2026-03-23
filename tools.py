@@ -87,8 +87,15 @@ TOOLS = [types.Tool(function_declarations=[
 ])]
 
 PROTECTED_PATHS = [
-  "/PROMPT.md"
+  "/PROMPT.md",
+  "/Recordings"
 ]
+
+def check_protected(path: str) -> bool:
+  for protected in PROTECTED_PATHS:
+    if path == protected or path.startswith(protected + "/"):
+      return True
+  return False
 
 def create_directory(path: str) -> str:
   """Create a directory at the given path."""
@@ -98,6 +105,9 @@ def create_directory(path: str) -> str:
   
   if not path.startswith("/"):
     return "ERROR: path must start with /"
+  
+  if check_protected(path):
+    return f"ERROR: writes to {path} are not permitted"
   
   path = path[1:]
   
@@ -133,6 +143,9 @@ def read_file(path: str, offset: int = 0, limit: int = 2000) -> str:
   
   if not path.startswith("/"):
     return "ERROR: path must start with /"
+  
+  if check_protected(path):
+    return f"ERROR: reads from {path} are not permitted"
   
   path = path[1:]
   
@@ -173,7 +186,7 @@ def edit_file(path: str, old_string: str, new_string: str, replace_all: bool = F
   if not path.startswith("/"):
     return "ERROR: path must start with /"
   
-  if path in PROTECTED_PATHS:
+  if check_protected(path):
     return f"ERROR: writes to {path} are not permitted"
 
   path = path[1:]
@@ -217,8 +230,8 @@ def write_file(path: str, content: str) -> str:
 
   if not path.startswith("/"):
     return "ERROR: path must start with /"
-
-  if path in PROTECTED_PATHS:
+  
+  if check_protected(path):
     return f"ERROR: writes to {path} are not permitted"
 
   path = path[1:]
@@ -255,6 +268,7 @@ def glob_files(pattern: str, path: str = "/") -> str:
   matches.sort(key=getmtime, reverse=True)
 
   relative = ["/" + m[len(NOTES_PATH):].lstrip("/") for m in matches]
+  relative = [m for m in relative if not check_protected(m)]
   return "\n".join(relative)
 
 def grep_files(

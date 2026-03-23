@@ -42,7 +42,6 @@ def invoke(audio_data: bytes, audio_format: str, log: Log):
     ]
 
     for i in range(0, MAX_ITERATIONS):
-        print(f"iteration {i}")
         log.write(f"Iteration {i}/{MAX_ITERATIONS}")
 
         response = openai.chat.completions.create(

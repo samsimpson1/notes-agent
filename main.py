@@ -24,7 +24,7 @@ def main():
     args = parser.parse_args()
     
     file_name = basename(args.audio_file)
-    name, ext = splitext(file_name)
+    _, ext = splitext(file_name)
     ext = ext[1:]
 
     with open(args.audio_file, "rb") as f:
@@ -33,7 +33,7 @@ def main():
     copy_recording(args.audio_file)
     
     log = Log(args.audio_file)
-
+    
     invoke(audio_data, ext, log)
 
     log.close()

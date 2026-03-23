@@ -12,14 +12,20 @@ class Log:
         if not isdir(recordings_path):
             mkdir(recordings_path, 0o750)
         
-        dest_path = join(recordings_path, f"{file_name}.log")
+        dest_path = join(recordings_path, f"{file_name}-log.md")
 
         self.file = open(dest_path, "w")
+        
+        self.write_table_header()
+    
+    def write_table_header(self):
+        self.file.write("| Timestamp | Message |\n")
+        self.file.write("|-----------|---------|\n")
     
     def write(self, message: str):
         dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        message = f"[{dt}] {message}"
-        print(message)
+        print(f"[{dt}] {message}")
+        message = f"| {dt} | `{message}` |"
         self.file.write(message + "\n")
         self.file.flush()
     

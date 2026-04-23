@@ -1,164 +1,90 @@
 import subprocess
 from os import mkdir
 from os.path import join, getmtime
+from google.genai import types
 from config import NOTES_PATH
 
-TOOLS = [
-  {
-    "type": "function",
-    "function": {
-      "name": "create_directory",
-      "description": "Create a directory at the given path",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "path": {
-            "type": "string",
-            "description": "Absolute path of directory to create"
-          }
-        },
-        "required": ["path"]
-      }
-    }
-  },
-  {
-    "type": "function",
-    "function": {
-      "name": "read_file",
-      "description": "Read a .md file from the notes directory, returning its contents",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "path": {
-            "type": "string",
-            "description": 'Path to the file, starting with "/"'
-          },
-          "offset": {
-            "type": "integer",
-            "description": "Number of lines to skip from the beginning of the file (default: 0)"
-          },
-          "limit": {
-            "type": "integer",
-            "description": "Maximum number of lines to return (default: 2000)"
-          }
-        },
-        "required": ["path"]
-      }
-    }
-  },
-  {
-    "type": "function",
-    "function": {
-      "name": "edit_file",
-      "description": "Perform an exact string replacement in a .md file",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "path": {
-            "type": "string",
-            "description": 'Path to the file, starting with "/"'
-          },
-          "old_string": {
-            "type": "string",
-            "description": "The exact string to search for and replace. Must appear exactly once unless replace_all is true."
-          },
-          "new_string": {
-            "type": "string",
-            "description": "The string to replace old_string with"
-          },
-          "replace_all": {
-            "type": "boolean",
-            "description": "If true, replace all occurrences of old_string; if false (default), errors when old_string appears more than once"
-          }
-        },
-        "required": ["path", "old_string", "new_string"]
-      }
-    }
-  },
-  {
-    "type": "function",
-    "function": {
-      "name": "write_file",
-      "description": "Write content to a .md file, creating it if it doesn't exist or overwriting it",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "path": {
-            "type": "string",
-            "description": 'Path to the file, starting with "/"'
-          },
-          "content": {
-            "type": "string",
-            "description": "Full content to write to the file"
-          }
-        },
-        "required": ["path", "content"]
-      }
-    }
-  },
-  {
-    "type": "function",
-    "function": {
-      "name": "glob_files",
-      "description": "Find files matching a glob pattern within a directory",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "pattern": {
-            "type": "string",
-            "description": "Glob pattern to match files"
-          },
-          "path": {
-            "type": "string",
-            "description": 'Directory to search in, starting with "/" (default: "/")'
-          }
-        },
-        "required": ["pattern"]
-      }
-    }
-  },
-  {
-    "type": "function",
-    "function": {
-      "name": "grep_files",
-      "description": "Search for a regex pattern within files using ripgrep",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "pattern": {
-            "type": "string",
-            "description": "Regex pattern to search for"
-          },
-          "path": {
-            "type": "string",
-            "description": 'Directory or file to search in, starting with "/" (default: "/")'
-          },
-          "glob": {
-            "type": "string",
-            "description": 'Glob pattern to filter which files are searched (e.g. "*.md")'
-          },
-          "output_mode": {
-            "type": "string",
-            "description": 'Output format: "files_with_matches" (default) returns one path per file with a match; "content" returns matching lines with line numbers in "<path>:<line>:<text>" format; "count" returns one "<path>:<n>" per file with match count'
-          },
-          "case_insensitive": {
-            "type": "boolean",
-            "description": "If true, match regardless of case (default: false)"
-          },
-          "context": {
-            "type": "integer",
-            "description": "Number of lines to show before and after each match, content mode only (default: 0)"
-          },
-          "multiline": {
-            "type": "boolean",
-            "description": "If true, allow patterns to span multiple lines (default: false)"
-          }
-        },
-        "required": ["pattern"]
-      }
-    }
-  }
-]
+TOOLS = [types.Tool(function_declarations=[
+  types.FunctionDeclaration(
+    name="create_directory",
+    description="Create a directory at the given path",
+    parameters=types.Schema(
+      type="OBJECT",
+      properties={
+        "path": types.Schema(type="STRING", description="Absolute path of directory to create"),
+      },
+      required=["path"],
+    ),
+  ),
+  types.FunctionDeclaration(
+    name="read_file",
+    description="Read a .md file from the notes directory, returning its contents",
+    parameters=types.Schema(
+      type="OBJECT",
+      properties={
+        "path": types.Schema(type="STRING", description='Path to the file, starting with "/"'),
+        "offset": types.Schema(type="INTEGER", description="Number of lines to skip from the beginning of the file (default: 0)"),
+        "limit": types.Schema(type="INTEGER", description="Maximum number of lines to return (default: 2000)"),
+      },
+      required=["path"],
+    ),
+  ),
+  types.FunctionDeclaration(
+    name="edit_file",
+    description="Perform an exact string replacement in a .md file",
+    parameters=types.Schema(
+      type="OBJECT",
+      properties={
+        "path": types.Schema(type="STRING", description='Path to the file, starting with "/"'),
+        "old_string": types.Schema(type="STRING", description="The exact string to search for and replace. Must appear exactly once unless replace_all is true."),
+        "new_string": types.Schema(type="STRING", description="The string to replace old_string with"),
+        "replace_all": types.Schema(type="BOOLEAN", description="If true, replace all occurrences of old_string; if false (default), errors when old_string appears more than once"),
+      },
+      required=["path", "old_string", "new_string"],
+    ),
+  ),
+  types.FunctionDeclaration(
+    name="write_file",
+    description="Write content to a .md file, creating it if it doesn't exist or overwriting it",
+    parameters=types.Schema(
+      type="OBJECT",
+      properties={
+        "path": types.Schema(type="STRING", description='Path to the file, starting with "/"'),
+        "content": types.Schema(type="STRING", description="Full content to write to the file"),
+      },
+      required=["path", "content"],
+    ),
+  ),
+  types.FunctionDeclaration(
+    name="glob_files",
+    description="Find files matching a glob pattern within a directory",
+    parameters=types.Schema(
+      type="OBJECT",
+      properties={
+        "pattern": types.Schema(type="STRING", description="Glob pattern to match files"),
+        "path": types.Schema(type="STRING", description='Directory to search in, starting with "/" (default: "/")'),
+      },
+      required=["pattern"],
+    ),
+  ),
+  types.FunctionDeclaration(
+    name="grep_files",
+    description="Search for a regex pattern within files using ripgrep",
+    parameters=types.Schema(
+      type="OBJECT",
+      properties={
+        "pattern": types.Schema(type="STRING", description="Regex pattern to search for"),
+        "path": types.Schema(type="STRING", description='Directory or file to search in, starting with "/" (default: "/")'),
+        "glob": types.Schema(type="STRING", description='Glob pattern to filter which files are searched (e.g. "*.md")'),
+        "output_mode": types.Schema(type="STRING", description='Output format: "files_with_matches" (default) returns one path per file with a match; "content" returns matching lines with line numbers in "<path>:<line>:<text>" format; "count" returns one "<path>:<n>" per file with match count'),
+        "case_insensitive": types.Schema(type="BOOLEAN", description="If true, match regardless of case (default: false)"),
+        "context": types.Schema(type="INTEGER", description="Number of lines to show before and after each match, content mode only (default: 0)"),
+        "multiline": types.Schema(type="BOOLEAN", description="If true, allow patterns to span multiple lines (default: false)"),
+      },
+      required=["pattern"],
+    ),
+  ),
+])]
 
 PROTECTED_PATHS = [
   "/PROMPT.md"

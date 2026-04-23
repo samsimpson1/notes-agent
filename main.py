@@ -35,14 +35,11 @@ def main():
     _, ext = splitext(file_name)
     ext = ext[1:]
 
-    with open(args.audio_file, "rb") as f:
-        audio_data = f.read()
-    
     copy_recording(args.audio_file, args.overwrite)
-    
+
     log = Log(args.audio_file)
-    
-    invoke(audio_data, ext, log)
+
+    invoke(args.audio_file, ext, log)
 
     log.close()
 
